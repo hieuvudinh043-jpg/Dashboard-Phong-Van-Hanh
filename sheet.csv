@@ -1,0 +1,12 @@
+DỰ ÁN TRỌNG ĐIỂM – Ứng dụng AI phân tích & báo cáo hạ tầng trong 5 phút,,,,,,,,,,,
+WBS,Tên Hạng Mục / Công Việc,Giai đoạn (PMBOK),Người phụ trách,Ngày bắt đầu,Ngày kết thúc,Thời lượng (Ngày),% Hoàn thành,Trạng thái,Mốc quan trọng,Lí do (nếu fail),Phương án
+1.0,Giai đoạn Khởi tạo (Initiation),Initiating,PM,01/07/2026,05/07/2026,5,100%,Hoàn thành,,,
+1.1,Phê duyệt Project Charter,Initiating,Sponsor,01/07/2026,02/07/2026,2,100%,Hoàn thành,Milestone,,
+1.2,Xác định Stakeholders,Initiating,PM,03/07/2026,05/07/2026,3,100%,Hoàn thành,,,
+2.0,Giai đoạn Lập kế hoạch (Planning),Planning,PM,06/07/2026,15/07/2026,10,100%,Hoàn thành,,,
+2.1,Lên kế hoạch Procurement vật tư,Planning,Procurement,06/07/2026,10/07/2026,5,100%,Hoàn thành,,,
+2.2,Lập Sprint Planning cho Đội Kỹ thuật,Planning,Scrum Master,11/07/2026,15/07/2026,5,100%,Hoàn thành,Milestone,,
+3.0,Giai đoạn Thực thi (Executing),Executing,Team,16/07/2026,15/08/2026,30,40%,Đang thực hiện,Milestone,,
+3.1,Kéo cáp quang & Lắp đặt vật lý,Executing,Team Infra,16/07/2026,25/07/2026,10,80%,Đang thực hiện,,,
+3.2,Triển khai phần mềm (Xem tab Agile),Executing,Team Tech,16/07/2026,15/08/2026,30,20%,Đang thực hiện,,,
+4.0,Đóng dự án (Closing),Closing,PM,16/08/2026,20/08/2026,5,0%,Chưa bắt đầu,Milestone,,

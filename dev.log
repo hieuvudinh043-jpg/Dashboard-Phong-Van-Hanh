@@ -1,0 +1,72 @@
+
+> dashboard@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+ ⚠ Port 3001 is in use, trying 3002 instead.
+ ⚠ Port 3002 is in use, trying 3003 instead.
+ ⚠ Port 3003 is in use, trying 3004 instead.
+ ⚠ Port 3004 is in use, trying 3005 instead.
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3005
+
+ ✓ Starting...
+ ✓ Ready in 11.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 2.6s (531 modules)
+Sử dụng bản cache của Google Sheet (dưới 5 phút)...
+ GET /?tab=duanthuong 200 in 3183ms
+Sử dụng bản cache của Google Sheet (dưới 5 phút)...
+ GET /?tab=duanthuong&sheet=HPCN 200 in 240ms
+Sử dụng bản cache của Google Sheet (dưới 5 phút)...
+ GET /?tab=vande 200 in 260ms
+Sử dụng bản cache của Google Sheet (dưới 5 phút)...
+ GET /?tab=duantrongdiem 200 in 250ms
+Sử dụng bản cache của Google Sheet (dưới 5 phút)...
+ GET /?tab=duanthuong 200 in 208ms
+Sử dụng bản cache của Google Sheet (dưới 5 phút)...
+ GET /?tab=vanhanh 200 in 198ms
+ ✓ Compiled in 42ms
+ ✓ Compiled in 378ms (263 modules)
+ ✓ Compiled in 86ms (263 modules)
+ ✓ Compiled in 116ms (249 modules)
+ ✓ Compiled in 211ms (263 modules)
+ ✓ Compiled in 85ms (263 modules)
+ ✓ Compiled in 168ms (263 modules)
+ ✓ Compiled in 82ms (263 modules)
+ ✓ Compiled in 121ms (249 modules)
+ ✓ Compiled in 161ms (263 modules)
+ ✓ Compiled in 178ms (249 modules)
+ ✓ Compiled in 252ms (263 modules)
+ ✓ Compiled in 81ms (263 modules)
+ ✓ Compiled in 174ms (249 modules)
+ ✓ Compiled in 189ms (249 modules)
+ ✓ Compiled in 121ms (249 modules)
+ ✓ Compiled in 103ms (250 modules)
+ ✓ Compiled in 147ms (250 modules)
+ ✓ Compiled in 176ms (250 modules)
+ ✓ Compiled in 84ms (250 modules)
+ ✓ Compiled in 133ms (250 modules)
+ ✓ Compiled in 116ms (250 modules)
+ ✓ Compiled in 98ms (250 modules)
+ ✓ Compiled in 173ms (250 modules)
+ ✓ Compiled in 156ms (250 modules)
+ ✓ Compiled in 211ms (264 modules)
+ ✓ Compiled in 126ms (250 modules)
+ ✓ Compiled in 142ms (250 modules)
+ ✓ Compiled in 200ms (250 modules)
+ ✓ Compiled in 81ms (250 modules)
+ ✓ Compiled in 134ms (250 modules)
+ ✓ Compiled in 142ms (250 modules)
+ ✓ Compiled in 211ms (250 modules)
+ ✓ Compiled in 134ms (250 modules)
+ ✓ Compiled in 53ms (250 modules)
+ ✓ Compiled in 81ms (250 modules)
+ ✓ Compiled in 187ms (250 modules)
+ ✓ Compiled in 124ms (250 modules)
+ ✓ Compiled in 195ms (250 modules)
+ ✓ Compiled in 90ms (250 modules)
+ ✓ Compiled in 125ms (250 modules)
+ ✓ Compiled in 120ms (250 modules)
+ ✓ Compiled in 139ms (250 modules)
+ ✓ Compiled in 96ms (250 modules)
