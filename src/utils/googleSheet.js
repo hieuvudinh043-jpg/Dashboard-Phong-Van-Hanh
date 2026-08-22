@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 const TEMP_XLSX = path.join(process.cwd(), 'temp_sheet.xlsx');
 
 export function getDbPathForWeek(week) {
-  const safeWeek = week ? week.replace(/\s+/g, '_') : 'Tuan_34';
+  const safeWeek = week ? week.replace(/[\s/\\:]+/g, '_') : 'Tuan_34';
   return path.join(process.cwd(), 'data', `sheet_db_${safeWeek}.json`);
 }
 
@@ -52,12 +52,12 @@ export async function fetchAllData(week = 'Tuần 34', forceSync = false) {
     const bypassCacheUrl = `${sheetUrl}&_t=${Date.now()}`;
     const { execSync } = require('child_process');
     
-    // Sử dụng curl với các tham số: --ipv4 (ép dùng IPv4 để tránh lỗi network), -s (silent), -L (follow redirect), -k (bỏ qua lỗi SSL)
-    const cmd = `curl --ipv4 -sLk "${bypassCacheUrl}" -o "${TEMP_XLSX}"`;
+    // Sử dụng curl với các tham số: --ipv4 (ép dùng IPv4), -s (silent), -L (follow redirect), -k (bỏ qua lỗi SSL), --max-time (tránh treo vĩnh viễn)
+    const cmd = `curl --max-time 15 --ipv4 -sLk "${bypassCacheUrl}" -o "${TEMP_XLSX}"`;
     execSync(cmd);
     
     if (!fs.existsSync(TEMP_XLSX) || fs.statSync(TEMP_XLSX).size === 0) {
-      throw new Error("File tải về bị lỗi hoặc rỗng. (CURL failed)");
+      throw new Error("File tải về bị lỗi hoặc rỗng. (CURL failed hoặc quá thời gian)");
     }
     
     // Sử dụng fs.readFileSync bản địa của Node thay vì XLSX.readFile 
@@ -68,67 +68,145 @@ export async function fetchAllData(week = 'Tuần 34', forceSync = false) {
 
     workbook.SheetNames.forEach(sheetName => {
       const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      
+      const mergeMap = {};
+      if (sheet['!merges']) {
+        sheet['!merges'].forEach(merge => {
+          const startCellRef = XLSX.utils.encode_cell(merge.s);
+          const startCell = sheet[startCellRef];
+          if (startCell) {
+            for (let r = merge.s.r; r <= merge.e.r; r++) {
+              for (let c = merge.s.c; c <= merge.e.c; c++) {
+                if (r === merge.s.r && c === merge.s.c) continue;
+                const cellRef = XLSX.utils.encode_cell({ r, c });
+                sheet[cellRef] = { ...startCell };
+              }
+            }
+            for (let r = merge.s.r; r <= merge.e.r; r++) {
+              for (let c = merge.s.c; c <= merge.e.c; c++) {
+                const isTopLeft = r === merge.s.r && c === merge.s.c;
+                mergeMap[`${r},${c}`] = {
+                  rowSpan: isTopLeft ? (merge.e.r - merge.s.r + 1) : 0,
+                  colSpan: isTopLeft ? (merge.e.c - merge.s.c + 1) : 0,
+                  startR: merge.s.r
+                };
+              }
+            }
+          }
+        });
+      }
+
+      const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false, dateNF: 'dd/mm/yyyy' });
       
       let headerRowIndex = -1;
-      for (let i = 0; i < Math.min(10, jsonData.length); i++) {
-        const row = jsonData[i];
-        const vals = Object.values(row).map(v => String(v).toLowerCase().trim());
-        if (
-          vals.includes('stt') || 
-          vals.includes('tt') || 
-          vals.includes('nội dung') ||
-          vals.some(v => v.includes('wbs')) ||
-          vals.some(v => v.includes('hạng mục')) ||
-          vals.some(v => v.includes('công việc')) ||
-          vals.some(v => v.includes('trạng thái'))
-        ) {
-          headerRowIndex = i;
-          break;
+      
+      if (sheetName === 'Ticket Escalate') {
+        for (let r = 0; r < rawData.length; r++) {
+          const row = rawData[r];
+          const vals = row.map(v => String(v).replace(/\r?\n|\r/g, ' ').toLowerCase().trim());
+          if (vals.some(v => v.includes('mục tiêu') || v.includes('tiến độ tổng thể') || v.includes('kế hoạch tiếp theo'))) {
+            headerRowIndex = r;
+            break;
+          }
+        }
+        if (headerRowIndex === -1) {
+          for (let r = 0; r < rawData.length; r++) {
+            const row = rawData[r];
+            if (row && row.some(v => String(v).trim() !== '')) {
+              headerRowIndex = r;
+              break;
+            }
+          }
+          if (headerRowIndex === -1) headerRowIndex = 0;
+        }
+      } else {
+        for (let r = 0; r < Math.min(10, rawData.length); r++) {
+          const row = rawData[r];
+          const vals = row.map(v => String(v).toLowerCase().trim());
+          if (
+            vals.some(v => v.includes('stt')) || 
+            vals.some(v => v.includes('tt')) || 
+            vals.some(v => v.includes('nội dung')) ||
+            vals.some(v => v.includes('pic')) ||
+            vals.some(v => v.includes('đơn vị')) ||
+            vals.some(v => v.includes('wbs')) ||
+            vals.some(v => v.includes('hạng mục')) ||
+            vals.some(v => v.includes('tên hạng mục')) ||
+            vals.some(v => v.includes('công việc')) ||
+            vals.some(v => v.includes('tên công việc')) ||
+            vals.some(v => v.includes('trạng thái')) ||
+            vals.some(v => v.includes('tình trạng')) ||
+            vals.some(v => v.includes('tiến độ'))
+          ) {
+            headerRowIndex = r;
+            break;
+          }
         }
       }
 
       if (headerRowIndex >= 0) {
-        const rawHeaders = Object.keys(jsonData[headerRowIndex]);
-        const mappedHeaders = {};
+        const headerRow = rawData[headerRowIndex];
+        const mappedHeaders = [];
+        const headerCounts = {};
+        let lastValidHeader = '';
         
-        rawHeaders.forEach(key => {
-          let headerText = jsonData[headerRowIndex][key];
-          if (typeof headerText === 'string') {
-            headerText = headerText.replace(/\r?\n|\r/g, ' ').trim();
+        for (let cIdx = 0; cIdx < headerRow.length; cIdx++) {
+          let headerText = String(headerRow[cIdx] || '');
+          headerText = headerText.replace(/\r?\n|\r/g, ' ').trim();
+          
+          if (headerText) {
+            lastValidHeader = headerText;
+          } else {
+            headerText = lastValidHeader || `Cột ${cIdx + 1}`;
           }
-          mappedHeaders[key] = headerText;
-        });
+          
+          if (headerCounts[headerText]) {
+            headerCounts[headerText]++;
+            headerText = `${headerText}_${headerCounts[headerText]}`;
+          } else {
+            headerCounts[headerText] = 1;
+          }
+          
+          mappedHeaders[cIdx] = headerText;
+        }
 
         const processedData = [];
-        for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
-          const row = jsonData[i];
+        for (let r = headerRowIndex + 1; r < rawData.length; r++) {
+          const row = rawData[r];
+          if (!row) continue;
           
           let isEmpty = true;
           const processedRow = {};
+          const rowSpans = {};
+          const colSpans = {};
           
-          rawHeaders.forEach(key => {
-            const headerName = mappedHeaders[key];
-            if (headerName && headerName.trim() !== '') {
-              let val = row[key];
-              if (val !== undefined && val !== null && val !== '') {
-                isEmpty = false;
-              }
-              if (typeof val === 'string') {
-                val = val.replace(/\r?\n|\r/g, ' ').trim();
-              }
-              processedRow[headerName] = val !== undefined ? val : '';
+          mappedHeaders.forEach((headerName, c) => {
+            let val = row[c];
+            if (val !== undefined && val !== null && val !== '') {
+              isEmpty = false;
+            }
+            if (typeof val === 'string') {
+              val = val.trim();
+            }
+            processedRow[headerName] = val !== undefined ? val : '';
+            
+            const mergeInfo = mergeMap[`${r},${c}`];
+            if (mergeInfo) {
+              rowSpans[headerName] = mergeInfo.rowSpan;
+              colSpans[headerName] = mergeInfo.colSpan;
             }
           });
 
           if (!isEmpty) {
+            processedRow._rowSpans = rowSpans;
+            processedRow._colSpans = colSpans;
             processedData.push(processedRow);
           }
         }
         
         allData[sheetName] = processedData;
       } else {
-        allData[sheetName] = jsonData;
+        allData[sheetName] = XLSX.utils.sheet_to_json(sheet, { defval: '' });
       }
     });
 

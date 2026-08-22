@@ -46,30 +46,62 @@ export default function WeekSelector({ initialWeeks, currentWeek }) {
     setLoading(false);
   };
 
+  const getWeekDateRange = (weekStr) => {
+    if (!weekStr) return '';
+    const match = weekStr.match(/\d+/);
+    if (!match) return '';
+    const weekNum = parseInt(match[0], 10);
+    const year = new Date().getFullYear();
+    
+    const d = new Date(year, 0, 1);
+    const dayNum = d.getDay() || 7;
+    d.setDate(d.getDate() + (4 - dayNum) + (weekNum - 1) * 7);
+    
+    const start = new Date(d);
+    start.setDate(start.getDate() - 3);
+    const end = new Date(d);
+    end.setDate(end.getDate() + 3);
+    
+    if (start.getMonth() === end.getMonth()) {
+      return `(${start.getDate()}-${end.getDate()}/${start.getMonth() + 1})`;
+    } else {
+      return `(${start.getDate()}/${start.getMonth() + 1} - ${end.getDate()}/${end.getMonth() + 1})`;
+    }
+  };
+
   return (
-    <div style={{ padding: '4px 12px', borderRadius: '20px', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: '600', display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
-      <span>🕒</span>
-      <span>Kỳ báo cáo:</span>
-      <select 
-        value={currentWeek} 
-        onChange={handleWeekChange}
-        disabled={loading}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          color: 'var(--text-primary)',
-          fontWeight: '700',
-          outline: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        {weeks.map((w, idx) => (
-          <option key={idx} value={w} style={{ background: 'var(--bg-secondary)', color: '#fff' }}>
-            {w}
-          </option>
-        ))}
-      </select>
-      
+    <div style={{ padding: '8px 12px', borderRadius: '16px', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', display: 'flex', gap: '12px', alignItems: 'center', background: 'var(--bg-secondary)', justifyContent: 'center' }}>
+      <span style={{ fontSize: '1.2rem', color: '#8f5fe8' }}>🕒</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <select 
+            value={currentWeek} 
+            onChange={handleWeekChange}
+            disabled={loading}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-primary)',
+              fontSize: '1rem',
+              fontWeight: '700',
+              outline: 'none',
+              cursor: 'pointer',
+              padding: '0 4px 0 0',
+              appearance: 'none',
+              textAlign: 'center'
+            }}
+          >
+            {weeks.map(w => (
+              <option key={w} value={w} style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>{w}</option>
+            ))}
+          </select>
+          <span style={{ fontSize: '0.7rem', pointerEvents: 'none' }}>▼</span>
+        </div>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+          {getWeekDateRange(currentWeek)}
+        </span>
+      </div>
+
       <button 
         onClick={handleAddWeek}
         disabled={loading}

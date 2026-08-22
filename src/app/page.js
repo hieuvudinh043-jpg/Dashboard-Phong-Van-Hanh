@@ -95,10 +95,10 @@ export default async function Home({ searchParams }) {
   const isProjectTab = activeTab === 'duantrongdiem' || activeTab === 'duanthuong';
 
   return (
-    <div className="app-container">
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <Sidebar activeTab={activeTab} activeSheet={activeSheet} groupedSheets={groupedSheets} currentWeek={activeWeek} weeks={weeks} />
       
-      <main className="main-content">
+      <main style={{ flex: 1, minWidth: 0, marginLeft: '280px', padding: '2rem 3rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* Main Header */}
         <header style={{ background: 'var(--bg-secondary)', padding: '1.5rem 2rem', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
@@ -116,7 +116,7 @@ export default async function Home({ searchParams }) {
 
         {activeSheet && isProjectTab && (
           <div style={{ marginTop: '2rem' }}>
-            <ProjectSummary data={activeSheetData} projectName={activeSheet} />
+            <ProjectSummary data={activeSheetData} projectName={activeSheet} currentWeek={activeWeek} />
           </div>
         )}
 

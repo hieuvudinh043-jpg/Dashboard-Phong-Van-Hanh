@@ -9,9 +9,27 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
   const [sheetUrl, setSheetUrl] = useState('');
+  const [theme, setTheme] = useState('dark');
+  const [autoSync, setAutoSync] = useState(true);
 
-  // Lấy link hiện tại
+  // Auto-sync effect (5 minutes)
   useEffect(() => {
+    let interval;
+    if (autoSync) {
+      interval = setInterval(() => {
+        handleSync(true); // Silent sync
+      }, 5 * 60 * 1000);
+    }
+    return () => clearInterval(interval);
+  }, [autoSync, currentWeek]);
+
+  // Lấy link hiện tại và theme
+  useEffect(() => {
+    // Khôi phục theme từ localStorage
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
     fetch('/api/settings').then(res => res.json()).then(data => {
       if (data.success && data.settings?.sheetUrl) {
         setSheetUrl(data.settings.sheetUrl);
@@ -45,16 +63,23 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
     }
   };
 
-  const handleSync = async () => {
-    setSyncing(true);
+  const handleSync = async (isAuto = false) => {
+    if (!isAuto) setSyncing(true);
     try {
       await fetch(`/api/sync?force=true&week=${encodeURIComponent(currentWeek)}`);
       router.refresh(); // Tải lại dữ liệu mới nhất
     } catch (error) {
       console.error("Lỗi đồng bộ:", error);
     } finally {
-      setSyncing(false);
+      if (!isAuto) setSyncing(false);
     }
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   const tabs = [
@@ -71,36 +96,52 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
       flexShrink: 0, 
       display: 'flex', 
       flexDirection: 'column', 
-      height: '100vh', 
-      position: 'sticky', 
-      top: 0, 
+      padding: '0', 
+      height: '100vh',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      zIndex: 100,
+      background: 'var(--bg-secondary, #191c24)',
       overflowY: 'auto',
-      background: 'var(--bg-secondary)',
-      borderRight: 'none'
+      borderRight: '1px solid var(--glass-border)',
+      boxShadow: '4px 0 15px rgba(0,0,0,0.05)'
     }}>
-      <div style={{ padding: '2rem 1.5rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <div>
-          <h3 style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px', marginBottom: '4px' }}>Hệ thống báo cáo</h3>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>Phòng Vận hành</h2>
-        </div>
+      {/* Tiêu đề Tool - Sticky */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        background: 'linear-gradient(135deg, var(--accent-secondary) 0%, #8f5fe8 100%)',
+        padding: '1.5rem',
+        borderBottom: '1px solid var(--glass-border)',
+        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+      }}>
+        <h1 style={{ 
+          fontSize: '1.25rem', 
+          fontWeight: '900', 
+          margin: 0,
+          color: '#ffffff',
+          lineHeight: '1.3',
+          textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}>
+          DASHBOARD<br/>PHÒNG VẬN HÀNH
+        </h1>
+      </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1.5rem', flex: 1 }}>
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <div key={tab.id}>
                 <Link 
-                  href={`/?tab=${tab.id}${tab.sheets.length > 0 ? `&sheet=${encodeURIComponent(tab.sheets[0])}` : ''}`} 
+                  href={`/?tab=${tab.id}`} 
                   style={{ 
-                    padding: '12px 16px', 
-                    borderRadius: '12px', 
-                    backgroundColor: isActive ? '#000000' : 'transparent',
-                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                    fontWeight: isActive ? '700' : '500', 
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    transition: 'var(--transition-fast)' 
+                    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', 
+                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    backgroundColor: isActive ? 'var(--bg-primary)' : 'transparent',
+                    fontWeight: isActive ? '600' : '500',
+                    transition: 'all 0.2s',
                   }}
                 >
                   <span style={{ 
@@ -126,8 +167,8 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
                             padding: '8px 12px',
                             borderRadius: '8px',
                             fontSize: '0.85rem',
-                            color: isSheetActive ? '#ffffff' : 'var(--text-secondary)',
-                            backgroundColor: isSheetActive ? '#000000' : 'transparent',
+                            color: isSheetActive ? (theme === 'light' ? '#000' : '#fff') : 'var(--text-secondary)',
+                            backgroundColor: isSheetActive ? 'var(--bg-primary)' : 'transparent',
                             fontWeight: isSheetActive ? '600' : '400',
                           }}
                         >
@@ -142,16 +183,40 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
           })}
         </nav>
 
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1.5rem', backgroundColor: '#000000', borderRadius: '16px' }}>
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1.5rem', margin: '0 1.5rem 1.5rem 1.5rem', backgroundColor: 'var(--bg-primary)', borderRadius: '16px' }}>
+          
+          <button 
+            className="btn-secondary" 
+            style={{ width: '100%', justifyContent: 'center', padding: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s', marginBottom: '4px' }}
+            onClick={toggleTheme}
+          >
+            {theme === 'dark' ? '☀️ Giao diện Sáng' : '🌙 Giao diện Tối'}
+          </button>
+
           <WeekSelector initialWeeks={weeks} currentWeek={currentWeek} />
           <button 
             className="btn-primary" 
             style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
-            onClick={handleSync}
+            onClick={() => handleSync(false)}
             disabled={syncing}
           >
             {syncing ? '⏳ Đang đồng bộ...' : '🔄 Đồng bộ dữ liệu'}
           </button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', marginTop: '-4px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Tự động đồng bộ (5p)</span>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '4px' }}>
+              <input 
+                type="checkbox" 
+                checked={autoSync} 
+                onChange={(e) => setAutoSync(e.target.checked)} 
+                style={{ cursor: 'pointer' }}
+              />
+              <span style={{ color: autoSync ? '#00e665' : 'var(--text-secondary)', fontWeight: autoSync ? 'bold' : 'normal' }}>
+                {autoSync ? 'Bật' : 'Tắt'}
+              </span>
+            </label>
+          </div>
           
           <button 
             className="btn-secondary" 
@@ -160,7 +225,7 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
             onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'var(--text-secondary)'; }}
             onMouseOut={(e) => { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
           >
-            📥 Xuất Excel (Tất cả)
+            📊 Xuất Excel
           </button>
           
           {/* Nguồn dữ liệu Google Sheets */}
@@ -192,7 +257,6 @@ export default function Sidebar({ activeTab = 'vande', activeSheet = '', grouped
             </div>
           </div>
         </div>
-      </div>
     </aside>
   );
 }

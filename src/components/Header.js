@@ -4,7 +4,7 @@ export default function Header() {
   return (
     <header className="glass-panel" style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px' }}>
       <div>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.2rem', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '0.2rem', background: 'linear-gradient(to right, var(--text-primary), var(--text-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Dashboard Giao Ban Phòng
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Theo dõi và quản lý hiệu suất theo thời gian thực</p>
